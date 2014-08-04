@@ -6,56 +6,61 @@
 //information character will be '1' else '0'. Fourth data will have Ir sensor//
 //number with highest reading. Fifth data will be '1' if i90 robot is near   //
 //to Ir beacon else it will be '0'.                                          //
-//v1.0                                                                       //
-//First created                                                              //
+//v1.1                                                                       //
+//Based on: v1.0                                                             //
+//Changelog:                                                                 //
+//-Bluetooth communication added                                             //
 //MohammadShahid Memon                                                       //
+//Huseyin Emre Erdem                                                         //
 //04.08.14                                                                   //
 ///////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
 
 #include "mbed.h"
 #include "HCSR04.h"   //Standard Library for HCSR04 Ultrasonic sensor
 
-///////////////////////////////////////////////////////////////////////////////
-//Following is brief explaination of HCSR04 library:                         //
-//First create the object HCSR04. To create object two variables are passed  //
-//First variable is pin number assigned for trigger of Ultrasonic sensor and //
-//other variable is pin number assigned for echo of Ultrasonic sensor. For   //
-//example if pin 29 is assigned to trigger and 30 to echo pins of ultrasonic //
-//sensor then "HCSR04 Sensor1(p29,p30)" Will create the object.              //
-//If HCSR04 object name is Sensor1 then Sensor1.distance(0) will give        //
-//distance in Inches and Sensor1.distance(1) will give distance in CM        //
-///////////////////////////////////////////////////////////////////////////////
+/*Following is brief explaination of HCSR04 library:                         
+First create the object HCSR04. To create object two variables are passed  
+First variable is pin number assigned for trigger of Ultrasonic sensor and 
+other variable is pin number assigned for echo of Ultrasonic sensor. For   
+example if pin 29 is assigned to trigger and 30 to echo pins of ultrasonic 
+sensor then "HCSR04 Sensor1(p29,p30)" Will create the object.              
+If HCSR04 object name is Sensor1 then Sensor1.distance(0) will give        
+distance in Inches and Sensor1.distance(1) will give distance in CM*/
 
+/*Prototypes*/
 void UpdateSensorInfo(void);    // UpdateSensorInfo function will read the sensor readings and update the information to be sent to the computer
 void ReadUltrasonic(void);      // ReadUltrasonic function will read the three ultrasonic sensors and update the part of to be sent info data array
 void ReadIr(void);              // ReadIr function will read the six Ir sensors and update the part of to be sent info data array
 
-Serial pc(USBTX, USBRX);        // Creates object for serial communication 
-
+/*Objects*/
 HCSR04 LeftUltrasonic(p21, p22);    // Creates Ultrasonic sensor objects
 HCSR04 CentralUltrasonic(p25, p26);
 HCSR04 RightUltrasonic(p29, p30);
-
 AnalogIn IR1(p15);                  // Assigning Analog pins for Ir sensors
 AnalogIn IR2(p16);
 AnalogIn IR3(p17);
 AnalogIn IR4(p18);
 AnalogIn IR5(p19);
 AnalogIn IR6(p20);
+Serial rn42(p9,p10);
+
+/*Variables*/
 char cSensorInfo[5];                // Character Array to be sent to pc
 int iThresholdForUltrasonic=0;      // Threshold value for ultrasonic sensors for obstacles
 int iThresholdForIr=0;              // Threshold value for Ir sensor for searching Ir beacon
+
 int main(){
-    
-   
+    rn42.baud(115200);
     while(1){
         UpdateSensorInfo();   // Read sensors and updates data to be sent
         wait(0.1);            // Frequency of transmitting data
+
+        /*Serial communication*/
+        if(rn42.getc() == 's'){//If request is received
+            for(int i=0;i<5;i++){//Send all characters
+                rn42.putc(cSensorInfo[i]);
+            }
+        }
     }
 }
 
@@ -110,4 +115,5 @@ void ReadIr(){
 void UpdateSensorInfo(){  // Function calls ReadUltrasonic and ReadIr
     ReadUltrasonic();
     ReadIr();
-}         
+}
+         
