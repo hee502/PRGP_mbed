@@ -1,4 +1,4 @@
-Sensor_reading_full
+PRGP_mbed
 ===================
 
 PRGP source code for mbed
